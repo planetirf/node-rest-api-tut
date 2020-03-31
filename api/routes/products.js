@@ -1,6 +1,35 @@
 const express = require('express');
 const router = express.Router();
 const mongoose = require('mongoose');
+// add multer for image / binary data upload?
+const multer = require('multer');
+
+const storage = multer.diskStorage({
+    destination: function (req, file, cb) {
+        cb(null, './uploads/');
+    },
+    filename: function(req, file, cb) {
+        cb(null, new Date().toISOString() + file.originalname)
+    }
+});
+
+const fileFilter = (req, file, cb) => {
+    // reject a fall
+    if(file.mimetype === 'image/jpeg' || file.mimetype === 'image/png') {
+        cb(null,true)
+    } else {
+        cb(null, false);
+    }
+
+};
+
+const upload = multer({storage: storage, 
+    limits: {
+        fileSize: 1024 * 1024 * 5 
+    },
+    fileFilter: fileFilter
+    });
+
 
 
 // import from model > product.jjs
@@ -21,6 +50,7 @@ router.get('/', (req, res, next) => {
                 return {
                     name: doc.name,
                     price: doc.price,
+                    productImage: doc.productImage,
                     _id: doc._id,
                     request: {
                         type: 'GET',
@@ -48,22 +78,19 @@ router.get('/', (req, res, next) => {
     });
 });
 
-
-router.post('/', (req, res, next) => {
-    // use .body object attached to the req object by body parser
-    
-    // const product = {
-    //     name: req.body.name,
-    //     price: req.body.price,
-    // };
+// pass middleware - handler before (req, res, next)
+router.post('/', upload.single('productImage'),(req, res, next) => {
+    console.log(req.file);
     //  now using Product constructure from models file
     const product = new Product({
         _id: mongoose.Types.ObjectId(),
         name: req.body.name,
         price: req.body.price,
+        productImage: req.file.path
     });
     // .save() is from mongoose
     //  
+
     product
         .save()
         .then(result => {
