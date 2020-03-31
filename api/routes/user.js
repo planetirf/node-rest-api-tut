@@ -3,9 +3,11 @@ const router = express.Router();
 const mongoose = require('mongoose');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
+const checkAuth = require('../middleware/check-auth')
 
 // import user model
 const User = require('../models/user');
+const UserController = require('../controllers/user');
 // New User Sign up route
 router.post('/signup', (req, res, next) => {
     User.findOne({email: req.body.email})
@@ -47,67 +49,10 @@ router.post('/signup', (req, res, next) => {
 });
 
 // User Login
-
-router.post('/login', (req, res, next) => {
-    User.findOne({email: req.body.email})
-        .exec()
-        .then(user => {
-            if (!user) {
-                return res.status(401).json({
-                    message: 'Auth Failed'
-                });
-            }
-            bcrypt.compare(req.body.password, user.password, (err, result) => {
-                if (err) {
-                    return res.status(401).json({
-                        message: 'Auth Failed'
-                    });
-                }
-                if (result) {
-                    const token = jwt.sign({
-                        email: user.email,
-                        userId: user._id
-                    }, 
-                    process.env.JWT_KEY,
-                    {
-                        expiresIn: "1h"
-                    }
-                    // omit callback and asign as variable token instead
-                    );
-                    return res.status(200).json({
-                        message: 'Auth Successful',
-                        token: token
-                    });
-                }
-                return res.status(401).json({
-                    message: 'Auth Failed'
-                });
-            });
-        })
-        .catch(err => {
-            console.log(err);
-            res.status(500).json({
-                error: err
-            });
-        });
-});
+router.post('/login', UserController.user_login);
 
 // Delete singup
-
-router.delete('/:userId', (req, res, next) => {
-    User.deleteOne({_id: req.params.userId})
-        .exec()
-        .then(result => {
-            res.status(200).json({
-                message: 'User Deleted'
-            });
-        })
-        .catch(err => {
-            res.status(500).json({
-                error: err  
-            });
-        });
-})
+router.delete('/:userId', checkAuth, UserController.user_delete)
 
 
 module.exports = router;
