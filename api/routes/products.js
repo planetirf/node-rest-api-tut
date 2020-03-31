@@ -3,6 +3,8 @@ const router = express.Router();
 const mongoose = require('mongoose');
 // add multer for image / binary data upload?
 const multer = require('multer');
+// import check-aush middleware
+const checkAuth = require('../middleware/check-auth');
 
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
@@ -12,6 +14,7 @@ const storage = multer.diskStorage({
         cb(null, new Date().toISOString() + file.originalname)
     }
 });
+
 
 const fileFilter = (req, file, cb) => {
     // reject a fall
@@ -79,7 +82,7 @@ router.get('/', (req, res, next) => {
 });
 
 // pass middleware - handler before (req, res, next)
-router.post('/', upload.single('productImage'),(req, res, next) => {
+router.post('/',  checkAuth, upload.single('productImage'),(req, res, next) => {
     console.log(req.file);
     //  now using Product constructure from models file
     const product = new Product({
@@ -137,7 +140,7 @@ router.get('/:productId', (req, res, next) =>{
 
 });
 
-router.patch("/:productId", (req, res, next) => {
+router.patch("/:productId", checkAuth, (req, res, next) => {
   const id = req.params.productId;
   const updateObject = req.body;
   Product.update({ _id: id }, { $set: updateObject })
@@ -157,7 +160,7 @@ router.patch("/:productId", (req, res, next) => {
     });
 });
 
-router.delete('/:productId', (req, res, next) =>{
+router.delete('/:productId', checkAuth, (req, res, next) =>{
     const id = req.params.productId;
     Product.deleteOne({_id: id})
         .exec()
