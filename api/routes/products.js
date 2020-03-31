@@ -10,11 +10,28 @@ const Product = require('../models/product');
 // Handle requess
 router.get('/', (req, res, next) => {
     Product.find()
+    .select('-__v')
     .exec()
     .then(docs => {
-        console.log(docs);
+        // create response object
+        const response = {
+            count: docs.length,
+            products: docs.map(doc => {
+                // Meta data to pass along
+                return {
+                    name: doc.name,
+                    price: doc.price,
+                    _id: doc._id,
+                    request: {
+                        type: 'GET',
+                       // url: req.protocol + '://' + req.get('host')+'/products/' + doc._id
+                        url: req.protocol + '://' + req.get('host') + req.originalUrl + doc._id
+                    }
+                };
+            })
+        };
         // if (docs.length >= 0) {
-            res.status(200).json(docs);
+            res.status(200).json(response);
         // } else {
         //     res.status(404).json({
         //         message: 'No enntries found'
@@ -52,8 +69,15 @@ router.post('/', (req, res, next) => {
         .then(result => {
         console.log(result);
         res.status(201).json({
-            message: 'Handling POST reqquests to /products',
-            createdProduct: product,
+            message: 'Created product object successfully',
+            createdProduct: {
+                name: result.name,
+                price: result.price,
+                request: {
+                    type: 'GET',
+                    url: req.protocol + '://' + req.get('host') + req.originalUrl + result._id
+                }
+            },
         });
     })
     .catch(err => {
@@ -92,9 +116,13 @@ router.patch("/:productId", (req, res, next) => {
   Product.update({ _id: id }, { $set: updateObject })
     .exec()
     .then(result => {
-      res
-        .status(200)
-        .json({ message: "Product updated succesfully", product: result });
+      res.status(200).json({
+          message: "Product updated",
+           request: {
+               type: 'GET',
+               url: req.protocol + '://' + req.get('host') + req.originalUrl + id
+           } 
+        });
     })
     .catch(err => {
       console.log(err);
@@ -107,7 +135,14 @@ router.delete('/:productId', (req, res, next) =>{
     Product.deleteOne({_id: id})
         .exec()
         .then(result => {
-            res.status(200).json(result);
+            res.status(200).json({
+                message: 'Product Deleted',
+                request: {
+                    type: 'POST',
+                    url: req.protocol + '://' + req.get('host'),
+                    body: {name: 'String', price: 'Number'}
+                }
+            });
         })
         .catch(err => {
             console.log(err);
