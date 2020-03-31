@@ -9,6 +9,7 @@ const mongoose = require('mongoose');
 const productRoutes = require('./api/routes/products');
 const soilProfileRoutes = require('./api/routes/soil-profiles');
 const orderRoutes = require('./api/routes/orders');
+const userRoutes = require('./api/routes/user')
 
 // process.env.MONGO_ATLAS_PW is 'server-side; stored in nodemon.json
 mongoose.connect('mongodb+srv://admin-tut:' +
@@ -44,7 +45,7 @@ app.use(bodyParser.json());
 // routes to pages
 app.use('/orders', orderRoutes);
 app.use('/products', productRoutes);
-
+app.use('/user', userRoutes);
 
 // removed to add the routs above.
 //
