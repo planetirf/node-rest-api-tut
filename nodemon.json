@@ -1,5 +1,6 @@
 {
     "env": {
-        "MONGO_ATLAS_SP": "lazerhawk1985"
+        "MONGO_ATLAS_SP": "lazerhawk1985",
+        "JWT_KEY": "secret"
     }
 }
